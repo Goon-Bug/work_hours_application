@@ -1,0 +1,4 @@
+PySimpleGUI~=4.60.5
+mysql~=0.0.3
+mysql-connector-python~=8.1.0
+pandas~=2.0.3
