@@ -1,6 +1,6 @@
 import calendar
 import PySimpleGUI as sg
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta as td
 import mysql.connector
 import breaks
 import utilities as ut
@@ -33,8 +33,10 @@ def change_breaks_window():
             new_dict = {}
             for key, val in values.items():
                 try:
-                    new_dict[key[:6]] = [dt.strptime(values[f"{key[:6]}_thr"], "%H:%M:%S").time(),
-                                         dt.strptime(values[key], "%H:%M:%S").time()]
+                    t = dt.strptime(values[f"{key[:6]}_thr"], "%H:%M:%S").time()
+                    l = dt.strptime(values[key], "%H:%M:%S").time()
+                    new_dict[key[:6]] = [td(hours=t.hour, minutes=t.minute, seconds=t.second),
+                                         td(hours=l.hour, minutes=l.minute, seconds=l.second)]
                 except ValueError as e:
                     sg.popup_ok("Please enter times in correct format 00:00:00")
                     error = True
