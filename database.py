@@ -1,7 +1,12 @@
+"""
+These functions can be used to alter the database used to store work shifts and times
+"""
+
 import mysql.connector
 import pandas as pd
 import database_config as dc  # change to 'database_config_example'
 import utilities as ut
+import breaks
 
 cnx = mysql.connector.connect(user=dc.USERNAME,
                               password=dc.PASSWORD,
@@ -13,8 +18,10 @@ mycursor = cnx.cursor(buffered=True)
 
 def setup():
     """
-    Run this function to create the necessary tables and database
+    Run this function to create the necessary tables, database and files
     """
+    breaks.set_default_breaks()
+
     mycursor.execute("CREATE DATABASE work_hours")
 
     mycursor.execute("CREATE TABLE shifts ("
@@ -32,6 +39,10 @@ def setup():
                      "end_time TIME, "
                      "hours_worked DECIMAL, "
                      "pay DECIMAL)")
+
+    mycursor.execute("CREATE TABLE breaks ("
+                     "threshold TIME, "
+                     "length_of_break TIME)")
 
     ut.insert_days_off()
 
@@ -183,3 +194,5 @@ def alter_data_type(table, col, data_type):
         print(f"Column '{col}' datatype changed to '{data_type}'")
     except mysql.connector.Error as err:
         print(err)
+
+

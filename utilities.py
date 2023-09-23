@@ -3,14 +3,10 @@ import re
 import pandas as pd
 from datetime import datetime as dt, timedelta as td
 import database as db
+import breaks
 
 DEFAULT_PAY_RATE = "11.11"
 START_OF_THE_WEEK = 5  # Saturday
-BREAKS_DICT = {
-    'break1': [td(hours=8, minutes=10), td(minutes=45)],
-    'break2': [td(hours=6, minutes=10), td(minutes=30)],
-    'break3': [td(hours=4, minutes=10), td(minutes=15)]
-}
 
 time_re = re.compile("^([01]\d|2[0-3]):([0-5]\d)$")
 
@@ -222,11 +218,16 @@ def shifts_for_display(cnx):
 
 
 def minus_break_times(hours):
-    for br in BREAKS_DICT:
-        if hours >= BREAKS_DICT[br][0]:
-            hours = hours - BREAKS_DICT[br][1]
+    """
+    :param hours: timedelta (00:00:00)
+    :return: timedelta
+    """
+    d = breaks.return_breaks()
+    for br in d:
+        if hours >= d[br][0]:
+            hours = hours - d[br][1]
             return hours
-        elif hours < BREAKS_DICT['break3'][0]:
+        elif hours < d['break3'][0]:
             return hours
 
 
@@ -250,6 +251,3 @@ def is_duplicate(mycursor, date):
         return True
     else:
         return False
-
-
-# make minus breaks function

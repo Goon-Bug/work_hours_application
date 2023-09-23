@@ -1,15 +1,50 @@
 import calendar
 import PySimpleGUI as sg
 from datetime import datetime as dt
-
 import mysql.connector
-
+import breaks
 import utilities as ut
 import database as db
 
 sg.theme("darkamber")
 sg.set_options(font="helvetica")
 days = calendar.day_abbr
+
+
+def change_breaks_window():
+    br_dict = breaks.return_breaks()
+    title_col = [[sg.T("Threshold        "), sg.T("        Length of Break")]]
+    rows = [[sg.T(br),
+             sg.I(default_text=br_dict[br][0], key=f"{br}_thr", size=15),
+             sg.I(default_text=br_dict[br][1], key=f"{br}_lng", size=15)]
+            for br in br_dict]
+
+    layout = [[sg.Column(title_col, element_justification="center", expand_x=True, pad=(5, 5))],
+              [sg.Column(rows)],
+              [sg.Submit(), sg.Cancel()]]
+
+    window = sg.Window("Main Window", layout, element_padding=(5, 5))
+    while True:
+        error = False
+        event, values = window.read()
+        if event == "Exit" or event == sg.WIN_CLOSED or event == "Cancel":
+            break
+        if event == "Submit":
+            new_dict = {}
+            for key, val in values.items():
+                try:
+                    new_dict[key[:6]] = [dt.strptime(values[f"{key[:6]}_thr"], "%H:%M:%S").time(),
+                                         dt.strptime(values[key], "%H:%M:%S").time()]
+                except ValueError as e:
+                    sg.popup_ok("Please enter times in correct format 00:00:00")
+                    error = True
+                    break
+
+            if not error:
+                breaks.save_new_dict(new_dict)
+                sg.popup_ok("Breaks Changed")
+
+    window.close()
 
 
 def delete_shift_window():
@@ -146,7 +181,8 @@ def main():
               [sg.T(f"Total Hours Worked: {pay_hrs['hours_worked']}", expand_x=True, justification="r")],
               [sg.B("Input Times", key="-TIMES-", expand_x=True)],
               [sg.B("Delete shift", key="-DELETE-", expand_x=True)],
-              [sg.B("Change Shifts", key="-SHIFTS-", expand_x=True)]]
+              [sg.B("Change Shifts", key="-SHIFTS-", expand_x=True)],
+              [sg.B("Change Breaks", key="-BREAKS-", expand_x=True)]]
 
     window = sg.Window("Main Window", layout)
     while True:
@@ -161,6 +197,9 @@ def main():
             ut.refresh_window(window, main)
         if event == "-DELETE-":
             delete_shift_window()
+            ut.refresh_window(window, main)
+        if event == "-BREAKS-":
+            change_breaks_window()
             ut.refresh_window(window, main)
 
     window.close()
